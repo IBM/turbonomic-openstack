@@ -1,0 +1,20 @@
+apiVersion: mediation.turbonomic.ibm.com/v1alpha1
+kind: OpenstackProbe
+metadata:
+  name: openstackprobe-sample
+spec:
+  turboProbeConfig:
+    discoveryConfig:
+      numObjectsPerChunk: 5000
+      chunkSendDelayMillis: 0
+      entityIdSuffix: "7ba7b140-6210-4b82-b672-f29a34081301"
+      requestPageSize: 100
+    loggingLevel: 3
+    restAPIConfig:
+      turboServer: ""
+      turbonomicSecretCredentialsName: turbonomic-credentials
+  image:
+    registry: icr.io/cpopen/turbonomic/mediation-openstack
+    version: <OPENSTACK_IMAGE_TAG>
+  numaConfig: |
+    {"targets": []}

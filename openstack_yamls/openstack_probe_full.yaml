@@ -1,0 +1,94 @@
+# Secret for Turbonomic OAuth2 credentials
+# Encode values with: echo -n '<value>' | base64 -w0
+apiVersion: v1
+kind: Secret
+metadata:
+  name: turbonomic-credentials
+  namespace: turbonomic
+type: Opaque
+data:
+  clientid: <Client_id_encoded_base64>
+  clientsecret: <Client_secret_encoded_base64>
+---
+# ConfigMap holds the probe configuration
+# probe-config.json:       Turbonomic server connection and discovery settings
+# host-numa-config.json:   (Optional) NUMA topology for OpenStack compute hosts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mediation-openstack-configmap
+  namespace: turbonomic
+data:
+  probe-config.json: |-
+    {
+      "probeConfig": {
+        "restAPIConfig": {
+          "turboServer": "https://<TURBO_SERVER_URL>"
+        },
+        "discoveryConfig": {
+          "chunkSendDelayMillis": 0,
+          "NumObjectsPerChunk": 5000,
+          "requestPageSize": 100
+        },
+        "loggingLevel": 2
+      }
+    }
+  host-numa-config.json: |-
+    {"targets": []}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediation-openstack
+  namespace: turbonomic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mediation-openstack
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mediation-openstack
+    spec:
+      # If using a private registry, uncomment and specify the image pull secret name
+      # imagePullSecrets:
+      #   - name: <your-image-pull-secret-name>
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: mediation-openstack
+        # Replace the image version tag to match your Turbo Server version
+        image: icr.io/cpopen/turbonomic/mediation-openstack:<OPENSTACK_IMAGE_TAG>
+        imagePullPolicy: IfNotPresent
+        args:
+          - --v=2
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: mediation-openstack-configmap-volume
+          mountPath: /etc/turbonomic
+        - name: tmpfs0
+          mountPath: /tmp
+        - name: turbonomic-credentials-volume
+          mountPath: /etc/turbonomic/credentials
+          readOnly: true
+      volumes:
+      - name: mediation-openstack-configmap-volume
+        configMap:
+          name: mediation-openstack-configmap
+          defaultMode: 0660
+      - name: tmpfs0
+        emptyDir: {}
+      - name: turbonomic-credentials-volume
+        secret:
+          defaultMode: 420
+          optional: true
+          secretName: turbonomic-credentials
+      restartPolicy: Always
