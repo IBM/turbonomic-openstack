@@ -191,14 +191,6 @@ rules:
   - list
   - watch
 - apiGroups:
-  - charts.helm.k8s.io
-  resources:
-  - kubeturbos
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
   - mediation.turbonomic.ibm.com
   resources:
   - openstackprobes

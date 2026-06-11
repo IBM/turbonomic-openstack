@@ -13,8 +13,75 @@ spec:
     restAPIConfig:
       turboServer: ""
       turbonomicSecretCredentialsName: turbonomic-credentials
+      # Basic auth via spec (deprecated — credentials stored unencrypted in ConfigMap):
+      # opsUsername: "administrator"
+      # opsPassword: "your-password"
+      #
+      # Basic auth via Secret (preferred over in-spec):
+      # Create: kubectl create secret generic turbonomic-credentials \
+      #   --from-literal=username=administrator --from-literal=password=<pw>
   image:
     registry: icr.io/cpopen/turbonomic/mediation-openstack
-    version: <OPENSTACK_IMAGE_TAG>
+    version: 8.20.1
+  automatedNumaConfigDiscovery:
+    enabled: false
+    openstackClientPodNamespace: openstack
+    openstackClientPodName: openstackclient
+    discoveryIntervalSec: 1800
+    maxConcurrency: 5
+    perNodeTimeoutSec: 60
   numaConfig: |
-    {"targets": []}
+    {
+      "numa-topology": {
+        "hosts":
+          [
+            {
+              "host-id": "computehci-0.turbo.lab.test",
+              "numas": [
+                {
+                  "numa-id": "cell0",
+                  "cpu": {
+                    "used": 4,
+                    "capacity": 56,
+                    "vm-assigned": [
+                      {"vmId": "numa-test", "usage": 4}
+                    ]
+                  },
+                  "pci": [
+                    {
+                      "used": 1,
+                      "capacity": 8,
+                      "alias": "sriov_vf",
+                      "vendorId": "8086",
+                      "productId": "107d",
+                      "vm-assigned": [
+                        {"vmId": "numa-test", "usage": 1}
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "numa-id": "cell1",
+                  "cpu": {
+                    "used": 0,
+                    "capacity": 56,
+                    "vm-assigned": [
+                    ]
+                  },
+                  "pci": [
+                    {
+                      "used": 0,
+                      "capacity": 8,
+                      "alias": "sriov_vf",
+                      "vendorId": "",
+                      "productId": "",
+                      "vm-assigned": [
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+      }
+    }
