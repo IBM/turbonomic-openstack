@@ -22,7 +22,7 @@ spec:
       #   --from-literal=username=administrator --from-literal=password=<pw>
   image:
     registry: icr.io/cpopen/turbonomic/mediation-openstack
-    version: 8.20.5
+    version: 8.20.6
   automatedNumaConfigDiscovery:
     enabled: false
     openstackClientPodNamespace: openstack
